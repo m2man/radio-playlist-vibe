@@ -1,129 +1,98 @@
+let playlist = [];
+let currentIndex = 0;
 let player;
-let isReady = false;
 
-// default playlist
-let currentPlaylist = "RD5JbH71fboA8";
+// load JSON first
+async function loadPlaylist() {
+  const res = await fetch("playlist.json");
+  playlist = await res.json();
 
-// elements
-const progress = document.getElementById("progress");
-const progressContainer = document.getElementById("progressContainer");
-const currentEl = document.getElementById("current");
-const durationEl = document.getElementById("duration");
-const titleEl = document.getElementById("title");
+  // random start
+  currentIndex = Math.floor(Math.random() * playlist.length);
 
-// extract playlist ID
-function extractPlaylistId(input) {
-  const match = input.match(/[?&]list=([^&]+)/);
-  return match ? match[1] : input.trim();
+  initPlayer();
 }
 
-// init player
-function onYouTubeIframeAPIReady() {
-  player = new YT.Player("player", {
-    height: "0",
-    width: "0",
-    playerVars: {
-      listType: "playlist",
-      list: currentPlaylist,
-      autoplay: 0,
-      origin: window.location.origin
-    },
-    events: {
-      onReady: () => {
-        isReady = true;
-        updateTitle();
-      },
-      onStateChange: (event) => {
-        if (event.data === YT.PlayerState.PLAYING) {
-          updateTitle();
-        }
-      }
-    }
+// init Vimeo player
+function initPlayer() {
+  player = new Vimeo.Player("player", {
+    id: playlist[currentIndex].id,
+    width: 0
   });
+
+  updateTitle();
+
+  player.on("ended", next);
+
+  startProgressLoop();
 }
 
 // update title
 function updateTitle() {
-  if (!isReady) return;
-
-  const data = player.getVideoData();
-  if (data && data.title) {
-    titleEl.textContent = data.title;
-  }
+  document.getElementById("title").textContent =
+    playlist[currentIndex].title;
 }
 
-// load new playlist
-function loadPlaylist() {
-  if (!isReady) return;
+// load video
+function loadVideo() {
+  const video = playlist[currentIndex];
 
-  const input = document.getElementById("playlistInput").value;
-  if (!input) return;
-
-  const id = extractPlaylistId(input);
-
-  player.loadPlaylist({
-    list: id,
-    listType: "playlist"
-  });
-
-  document.getElementById("status").textContent = "Loaded";
+  player.loadVideo(video.id).then(() => {
+    updateTitle();
+    player.play();
+  }).catch(next); // skip broken
 }
 
 // controls
 function playPause() {
-  if (!isReady) return;
-
-  const state = player.getPlayerState();
-
-  if (state === YT.PlayerState.PLAYING) {
-    player.pauseVideo();
-  } else {
-    player.playVideo();
-  }
+  player.getPaused().then(paused => {
+    paused ? player.play() : player.pause();
+  });
 }
 
 function next() {
-  if (!isReady) return;
-  player.nextVideo();
+  currentIndex = (currentIndex + 1) % playlist.length;
+  loadVideo();
 }
 
 function prev() {
-  if (!isReady) return;
-  player.previousVideo();
+  currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+  loadVideo();
 }
 
-// progress update loop
-setInterval(() => {
-  if (!isReady) return;
+// progress
+function startProgressLoop() {
+  setInterval(async () => {
+    try {
+      const current = await player.getCurrentTime();
+      const duration = await player.getDuration();
 
-  const duration = player.getDuration();
-  const current = player.getCurrentTime();
+      if (!duration) return;
 
-  if (!duration) return;
+      document.getElementById("progress").style.width =
+        (current / duration) * 100 + "%";
 
-  const percent = (current / duration) * 100;
-  progress.style.width = percent + "%";
-
-  currentEl.textContent = format(current);
-  durationEl.textContent = format(duration);
-
-}, 500);
+      document.getElementById("current").textContent = format(current);
+      document.getElementById("duration").textContent = format(duration);
+    } catch {}
+  }, 500);
+}
 
 // seek
-progressContainer.onclick = (e) => {
-  if (!isReady) return;
+document.getElementById("progressContainer").onclick = async (e) => {
+  const rect = e.currentTarget.getBoundingClientRect();
+  const percent = (e.clientX - rect.left) / rect.width;
 
-  const width = progressContainer.clientWidth;
-  const clickX = e.offsetX;
-
-  const duration = player.getDuration();
-  player.seekTo((clickX / width) * duration, true);
+  const duration = await player.getDuration();
+  player.setCurrentTime(duration * percent);
 };
 
 // format time
 function format(t) {
-  if (!t) return "0:00";
   const m = Math.floor(t / 60);
   const s = Math.floor(t % 60).toString().padStart(2, "0");
   return `${m}:${s}`;
 }
+
+// start app
+loadPlaylist();
