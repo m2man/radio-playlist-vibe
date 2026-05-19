@@ -1,102 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8" />
-<title>YouTube Radio</title>
+  <title>Vimeo Radio</title>
 
-<style>
-body {
-  margin: 0;
-  height: 100vh;
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-  color: #e2e8f0;
-  font-family: system-ui, sans-serif;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-.card {
-  width: 320px;
-  padding: 25px;
-  border-radius: 20px;
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(10px);
-  text-align: center;
-}
+    .card {
+      width: 320px;
+      padding: 25px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.05);
+      text-align: center;
+    }
 
-input {
-  width: 100%;
-  padding: 8px;
-  border-radius: 8px;
-  border: none;
-  margin-bottom: 10px;
-  outline: none;
-}
+    #title {
+      margin: 10px 0;
+      font-size: 14px;
+    }
 
-.status {
-  font-size: 12px;
-  opacity: 0.7;
-}
+    .progress-container {
+      height: 5px;
+      background: rgba(255,255,255,0.2);
+      margin: 10px 0;
+      cursor: pointer;
+    }
 
-#title {
-  font-size: 13px;
-  margin: 10px 0;
-  opacity: 0.85;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+    .progress {
+      height: 100%;
+      width: 0%;
+      background: white;
+    }
 
-/* progress */
-.progress-container {
-  height: 5px;
-  background: rgba(255,255,255,0.2);
-  margin: 10px 0;
-  cursor: pointer;
-}
+    .time {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+    }
 
-.progress {
-  height: 100%;
-  width: 0%;
-  background: #e2e8f0;
-}
+    button {
+      margin: 10px;
+      padding: 10px;
+    }
 
-.time {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  opacity: 0.7;
-}
-
-button {
-  margin: 8px;
-  padding: 10px;
-  font-size: 16px;
-  border-radius: 50%;
-  border: 1px solid #e2e8f0;
-  background: none;
-  color: #e2e8f0;
-  cursor: pointer;
-}
-
-button:hover {
-  background: rgba(255,255,255,0.1);
-}
-</style>
+    #player {
+      width: 0;
+      height: 0;
+      overflow: hidden;
+    }
+  </style>
 </head>
 
 <body>
 
 <div class="card">
-
-  <div class="status" id="status">Ready</div>
-
-  <div id="title">—</div>
-
-  <input id="playlistInput" placeholder="Paste playlist URL or ID">
-
-  <button onclick="loadPlaylist()">Load</button>
+  <div id="title">Ready</div>
 
   <div class="progress-container" id="progressContainer">
     <div class="progress" id="progress"></div>
@@ -110,14 +77,13 @@ button:hover {
   <div id="player"></div>
 
   <div>
-    <button onclick="prev()">⏮</button>
-    <button onclick="playPause()">⏯</button>
-    <button onclick="next()">⏭</button>
+    <button onclick="prev()">Back</button>
+    <button onclick="playPause()">Play/Pause</button>
+    <button onclick="next()">Next</button>
   </div>
-
 </div>
 
-<script src="https://www.youtube.com/iframe_api"></script>
+<script src="https://player.vimeo.com/api/player.js"></script>
 <script src="script.js"></script>
 
 </body>
