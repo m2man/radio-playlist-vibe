@@ -1,89 +1,137 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Vimeo Radio</title>
+<meta charset="UTF-8" />
+<title>Vimeo Radio</title>
 
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      background: #0f172a;
-      color: #e2e8f0;
-      font-family: sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+<style>
+body {
+  margin: 0;
+  height: 100vh;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: #e2e8f0;
+  font-family: system-ui, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-    .card {
-      width: 320px;
-      padding: 25px;
-      border-radius: 20px;
-      background: rgba(255,255,255,0.05);
-      text-align: center;
-    }
+.card {
+  width: 320px;
+  padding: 25px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  text-align: center;
+}
 
-    #title {
-      margin: 10px 0;
-      font-size: 14px;
-    }
+/* title */
+#title {
+  margin: 10px 0;
+  font-size: 14px;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-    .progress-container {
-      height: 5px;
-      background: rgba(255,255,255,0.2);
-      margin: 10px 0;
-      cursor: pointer;
-    }
+/* upload */
+#fileInput {
+  margin: 10px 0;
+  font-size: 12px;
+}
 
-    .progress {
-      height: 100%;
-      width: 0%;
-      background: white;
-    }
+/* progress */
+.progress-container {
+  height: 5px;
+  background: rgba(255,255,255,0.2);
+  margin: 10px 0;
+  cursor: pointer;
+  border-radius: 5px;
+}
 
-    .time {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-    }
+.progress {
+  height: 100%;
+  width: 0%;
+  background: #e2e8f0;
+  border-radius: 5px;
+}
 
-    button {
-      margin: 10px;
-      padding: 10px;
-    }
+/* time */
+.time {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  opacity: 0.7;
+}
 
-    #player {
-      width: 0;
-      height: 0;
-      overflow: hidden;
-    }
-  </style>
+/* controls */
+.controls {
+  margin-top: 10px;
+}
+
+.controls button {
+  margin: 10px;
+  padding: 12px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: none;
+  color: #e2e8f0;
+  font-size: 13px;
+  cursor: pointer;
+  min-width: 60px;
+}
+
+.controls button:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+/* 🔥 hide Vimeo player */
+#player {
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+</style>
 </head>
 
 <body>
 
 <div class="card">
-  <div id="title">Ready</div>
 
+  <!-- title -->
+  <div id="title">Loading...</div>
+
+  <!-- upload JSON -->
+  <input type="file" id="fileInput" accept=".json" />
+
+  <!-- progress -->
   <div class="progress-container" id="progressContainer">
     <div class="progress" id="progress"></div>
   </div>
 
+  <!-- time -->
   <div class="time">
     <span id="current">0:00</span>
     <span id="duration">0:00</span>
   </div>
 
+  <!-- hidden player -->
   <div id="player"></div>
 
-  <div>
-    <button onclick="prev()">Back</button>
-    <button onclick="playPause()">Play/Pause</button>
-    <button onclick="next()">Next</button>
+  <!-- controls -->
+  <div class="controls">
+    <button onclick="prev()">⟨⟨</button>
+    <button onclick="playPause()" id="playBtn">▶</button>
+    <button onclick="next()">⟩⟩</button>
   </div>
+
 </div>
 
+<!-- Vimeo API -->
 <script src="https://player.vimeo.com/api/player.js"></script>
+
+<!-- Your script -->
 <script src="script.js"></script>
 
 </body>

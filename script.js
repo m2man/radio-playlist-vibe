@@ -1,19 +1,39 @@
 let playlist = [];
 let currentIndex = 0;
+let nextIndex = null;
 let player;
 
-// load JSON first
-async function loadPlaylist() {
-  const res = await fetch("playlist.json");
-  playlist = await res.json();
+// elements
+const titleEl = document.getElementById("title");
+const progress = document.getElementById("progress");
+const progressContainer = document.getElementById("progressContainer");
+const currentEl = document.getElementById("current");
+const durationEl = document.getElementById("duration");
+const playBtn = document.getElementById("playBtn");
 
-  // random start
+// =========================
+// LOAD PLAYLIST
+// =========================
+async function loadPlaylist() {
+  const saved = localStorage.getItem("playlist");
+
+  if (saved) {
+    playlist = JSON.parse(saved);
+    console.log("Loaded playlist from localStorage");
+  } else {
+    const res = await fetch("playlist.json");
+    playlist = await res.json();
+    console.log("Loaded default playlist.json");
+  }
+
   currentIndex = Math.floor(Math.random() * playlist.length);
 
   initPlayer();
 }
 
-// init Vimeo player
+// =========================
+// INIT PLAYER (ONLY ONCE)
+// =========================
 function initPlayer() {
   player = new Vimeo.Player("player", {
     id: playlist[currentIndex].id,
@@ -25,28 +45,47 @@ function initPlayer() {
   player.on("ended", next);
 
   startProgressLoop();
+
 }
 
-// update title
+// =========================
+// UPDATE TITLE
+// =========================
 function updateTitle() {
-  document.getElementById("title").textContent =
-    playlist[currentIndex].title;
+  titleEl.textContent = playlist[currentIndex].title;
 }
 
-// load video
+// =========================
+// LOAD VIDEO
+// =========================
 function loadVideo() {
-  const video = playlist[currentIndex];
+  titleEl.textContent = "Loading...";
 
-  player.loadVideo(video.id).then(() => {
-    updateTitle();
-    player.play();
-  }).catch(next); // skip broken
+  player.loadVideo(playlist[currentIndex].id)
+    .then(() => {
+      updateTitle();
+      player.play();
+      playBtn.textContent = "❚❚";
+    })
+    .catch(() => {
+      console.log("Skip broken video");
+      next();
+    });
 }
 
-// controls
+
+// =========================
+// CONTROLS
+// =========================
 function playPause() {
   player.getPaused().then(paused => {
-    paused ? player.play() : player.pause();
+    if (paused) {
+      player.play();
+      playBtn.textContent = "❚❚";
+    } else {
+      player.pause();
+      playBtn.textContent = "▶";
+    }
   });
 }
 
@@ -60,7 +99,9 @@ function prev() {
   loadVideo();
 }
 
-// progress
+// =========================
+// PROGRESS LOOP
+// =========================
 function startProgressLoop() {
   setInterval(async () => {
     try {
@@ -69,30 +110,80 @@ function startProgressLoop() {
 
       if (!duration) return;
 
-      document.getElementById("progress").style.width =
-        (current / duration) * 100 + "%";
+      progress.style.width = (current / duration) * 100 + "%";
 
-      document.getElementById("current").textContent = format(current);
-      document.getElementById("duration").textContent = format(duration);
+      currentEl.textContent = format(current);
+      durationEl.textContent = format(duration);
     } catch {}
   }, 500);
 }
 
-// seek
-document.getElementById("progressContainer").onclick = async (e) => {
-  const rect = e.currentTarget.getBoundingClientRect();
+// =========================
+// SEEK
+// =========================
+progressContainer.onclick = async (e) => {
+  const rect = progressContainer.getBoundingClientRect();
   const percent = (e.clientX - rect.left) / rect.width;
 
   const duration = await player.getDuration();
   player.setCurrentTime(duration * percent);
 };
 
-// format time
+// =========================
+// FORMAT TIME
+// =========================
 function format(t) {
   const m = Math.floor(t / 60);
   const s = Math.floor(t % 60).toString().padStart(2, "0");
   return `${m}:${s}`;
 }
 
-// start app
+// =========================
+// FILE UPLOAD (JSON)
+// =========================
+document.getElementById("fileInput").addEventListener("change", function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function (event) {
+    try {
+      const data = JSON.parse(event.target.result);
+
+      if (!Array.isArray(data)) {
+        alert("Invalid JSON format");
+        return;
+      }
+
+      const valid = data.every(v => v.id && v.title);
+      if (!valid) {
+        alert("Each item must have {id, title}");
+        return;
+      }
+
+      playlist = data;
+
+      // 💾 save to localStorage
+      localStorage.setItem("playlist", JSON.stringify(data));
+
+      currentIndex = Math.floor(Math.random() * playlist.length);
+
+      titleEl.textContent = "Loaded: " + file.name;
+
+      loadVideo();
+
+      console.log("Playlist loaded from file");
+
+    } catch (err) {
+      alert("Invalid JSON file");
+    }
+  };
+
+  reader.readAsText(file);
+});
+
+// =========================
+// START APP
+// =========================
 loadPlaylist();
